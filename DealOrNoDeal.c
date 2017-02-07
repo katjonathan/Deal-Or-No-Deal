@@ -11,53 +11,35 @@ typedef struct
 	int caseno;
 	int value;
 	int taken;
-} case;
+} casing;
 
 
+casing cases[TOTAL_CASES];
 int casesleft = TOTAL_CASES;
 
 
 void initarrays();
 void initcases();
 int listcases(int);
-void quicksort(int*, int, int);
-int partition(int*, int, int);
+void quicksort(int*, int, int);		// sorts an array of cases
+int partition(int*, int, int);		// helper to quicksort
 int readcase();
-int casematch(int*, int, int);		// matches an int to any entry in cases
-
+int casematch(casing*, int, int);		// matches an int to any entry in cases
 
 
 int main()
 {
 	initcases();
 	// .....
-	play();
+	// play();
 	
-	// free the arrays
-	free(cases);
-	cases = NULL;
 	return 0;
 }
 
-
-int casematch(int size, int key)
-{
-	int* ptr = array;
-	int i;
-	for(i = 0; i < size; i++)
-	{
-		if(ptr->caseno == key && ptr->taken == 0)
-		{
-			return 1;
-		}
-	}
-	return 0;
-}
 
 void initarrays()
 {
-	case* cases = (case*)malloc(sizeof(case)*TOTAL_CASES);
-	int* moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
+	extern int* moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
 	moneylist[0] = 1;
 	moneylist[1] = 5;
 	moneylist[2] = 10;
@@ -76,6 +58,43 @@ void initarrays()
 	{
 		moneylist[i] = moneylist[i-13] * 1000;
 	}
+}
+
+void initcases()
+{
+	// print a welcome screen with the rules
+	// .....
+	initarrays();
+	casesleft = TOTAL_CASES;
+	int i;
+	
+	// generate the cases
+	for(i = 0; i < TOTAL_CASES; i++)
+	{		
+		cases[i].caseno = i;
+		// search to see if value was recorded previously
+		int flag = 0;
+		int rand;
+		do 
+		{
+			rand = moneylist[rand()%TOTAL_CASES];
+			int j;
+			for(j = 0; j < i; j++)
+			{
+				if(rand == cases[j].value)
+				{
+					flag = 1;
+					break;
+				}
+				flag = 0;
+			}
+			
+		} while(flag == 1);
+		cases[i].value = rand;
+		cases[i].taken = 0;	
+	}
+	free(moneylist);
+	moneylist = NULL;
 }
 
 void quicksort(int* array, int start, int end)
@@ -134,7 +153,7 @@ int listcases(int mode)
 		}		 
 	}
 	quicksort(available, 0, casesleft);
-	printf("Cases avaiable to pick from:\n");
+	printf("cases avaiable to pick from:\n");
 	for(i = 0; i < casesleft; i++)
 	{
 		printf("%d\n", available[i]);
@@ -144,57 +163,17 @@ int listcases(int mode)
 	return 0;
 }
 
-void initcases()
-{
-	// print a welcome screen with the rules
-	// .....
-	initarrays();
-	casesleft = TOTAL_CASES;
-	int i;
-	
-	// generate the cases
-	for(i = 0; i < TOTAL_CASES; i++)
-	{		
-		cases[i].caseno = i;
-		// search to see if value was recorded previously
-		int flag = 0;
-		int rand;
-		do
-		{
-			rand = moneylist[rand()%TOTAL_CASES];
-			int j;
-			for(j = 0; j < i; j++)
-			{
-				if(rand == cases[j].value)
-				{
-					flag = 1;
-					break;
-				}
-				flag = 0;
-			}
-			
-		} while(flag == 1);
-		cases[i].value = rand;
-		cases[i].taken = 0;	
-	}
-	free(moneylist);
-	moneylist = NULL;
-}
-
-
 int readcase()
 {
 	char* input = (char*)malloc(sizeof(char)*1000);
-	do
+	do 
 	{
 		gets(input);
-		if(strcmp(input, "exit" == 0))
+		if(strcmp(input, "exit") == 0)
 		{
 			// free all arrays
 			free(input);
 			input = NULL;
-			free(cases);
-			cases = NULL;
 			
 			// exit the program
 			exit(0);
@@ -224,7 +203,22 @@ int readcase()
 			printf("ERROR: You have inputted an invalid number!\n");
 			printf("Type \"cases\" for a list of available cases.\n");
 		}
-	} while(1)
+	} while(1);
+}
+
+int casematch(casing* array, int size, int key)
+{
+	casing* ptr = array;
+	int i;
+	for(i = 0; i < size; i++)
+	{
+		if(ptr->caseno == key && ptr->taken == 0)
+		{
+			return 1;
+		}
+		ptr += i;
+	}
+	return 0;
 }
 
 void play()
@@ -233,12 +227,15 @@ void play()
 	// list all the cases available
 	int i;
 	// points to a case in the case array
-	case** chosen = (case**)malloc(sizeof(case*));
+	casing** chosen = (casing**)malloc(sizeof(casing*));
 	listcases(CASE_MODE);
 	printf("Choose a case to keep!\n  >  ");
 	// read whether the selection is valid
-	readcase();
-	do {
+	chosen = readcase();
+	do 
+	{
 		printf("Pick a case to eliminate!\n  >  ");
-	}
+		
+	} while(casesleft > 2);
 }
+
