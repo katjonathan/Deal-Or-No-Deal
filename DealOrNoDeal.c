@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define TOTAL_CASES 25
 #define CASE_MODE 0
@@ -69,6 +70,8 @@ void initcases()
 	initarrays();
 	casesleft = TOTAL_CASES;
 	int i;
+	time_t t;
+	srand((unsigned) time(&t));
 	
 	// generate the cases
 	for(i = 0; i < TOTAL_CASES; i++)
@@ -76,14 +79,14 @@ void initcases()
 		cases[i].caseno = i;
 		// search to see if value was recorded previously
 		int flag = 0;
-		int rand;
+		int random;
 		do 
 		{
-			rand = moneylist[rand()%TOTAL_CASES];
+			random = moneylist[rand() % TOTAL_CASES];
 			int j;
 			for(j = 0; j < i; j++)
 			{
-				if(rand == cases[j].value)
+				if(random == cases[j].value)
 				{
 					flag = 1;
 					break;
@@ -92,7 +95,7 @@ void initcases()
 			}
 			
 		} while(flag == 1);
-		cases[i].value = rand;
+		cases[i].value = random;
 		cases[i].taken = 0;	
 	}
 	free(moneylist);
@@ -192,7 +195,7 @@ casing* readcase()
 		}
 		if(atoi(input) > 0)
 		{
-			int val = casematch(cases, casesleft, atoi(input));
+			casing* val = casematch(cases, casesleft, atoi(input));
 			if(val != NULL)
 			{
 				free(input);
