@@ -16,6 +16,7 @@ typedef struct
 
 casing cases[TOTAL_CASES];
 int casesleft = TOTAL_CASES;
+int* moneylist;		// gives errors unless I put it here
 
 
 void initarrays();
@@ -23,8 +24,8 @@ void initcases();
 int listcases(int);
 void quicksort(int*, int, int);		// sorts an array of cases
 int partition(int*, int, int);		// helper to quicksort
-int readcase();
-int casematch(casing*, int, int);		// matches an int to any entry in cases
+casing* readcase();					// read user selection
+casing* casematch(casing*, int, int);		// matches an int to any entry in cases
 
 
 int main()
@@ -39,7 +40,8 @@ int main()
 
 void initarrays()
 {
-	extern int* moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
+	
+	moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
 	moneylist[0] = 1;
 	moneylist[1] = 5;
 	moneylist[2] = 10;
@@ -163,7 +165,7 @@ int listcases(int mode)
 	return 0;
 }
 
-int readcase()
+casing* readcase()
 {
 	char* input = (char*)malloc(sizeof(char)*1000);
 	do 
@@ -190,9 +192,9 @@ int readcase()
 		}
 		if(atoi(input) > 0)
 		{
-			if(casematch(casesleft, atoi(input)) == 1)
+			int val = casematch(cases, casesleft, atoi(input));
+			if(val != NULL)
 			{
-				int val = atoi(input);
 				free(input);
 				input = NULL;
 				return val;
@@ -206,7 +208,7 @@ int readcase()
 	} while(1);
 }
 
-int casematch(casing* array, int size, int key)
+casing* casematch(casing* array, int size, int key)
 {
 	casing* ptr = array;
 	int i;
@@ -214,11 +216,11 @@ int casematch(casing* array, int size, int key)
 	{
 		if(ptr->caseno == key && ptr->taken == 0)
 		{
-			return 1;
+			return ptr;		// SUCCESS
 		}
 		ptr += i;
 	}
-	return 0;
+	return NULL;				// FAILURE
 }
 
 void play()
@@ -231,11 +233,14 @@ void play()
 	listcases(CASE_MODE);
 	printf("Choose a case to keep!\n  >  ");
 	// read whether the selection is valid
-	chosen = readcase();
+	*chosen = readcase();
 	do 
 	{
 		printf("Pick a case to eliminate!\n  >  ");
 		
 	} while(casesleft > 2);
+	
+	free(chosen);
+	chosen = NULL;
 }
 
