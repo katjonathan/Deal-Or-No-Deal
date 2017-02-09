@@ -16,16 +16,19 @@ typedef struct
 
 
 casing cases[TOTAL_CASES];
+casing* untaken[TOTAL_CASES];
 int casesleft = TOTAL_CASES;
 
 
 void initarrays(int*);
 void initcases();
 int listcases(int);
-void quicksort(int*, int, int);		// sorts an array of cases
-int partition(int*, int, int);		// helper to quicksort
+void quicksort(casing*, int, int, int);		// sorts an array of cases
+int partition(casing*, int, int, int);		// helper to quicksort
 casing* readcase();					// read user selection
 casing* casematch(casing*, int, int);		// matches an int to any entry in cases
+void remove(casing*, casing);
+int offer();		// this is the value of the banker's offer
 
 
 int main()
@@ -96,38 +99,72 @@ void initcases()
 		cases[i].value = random;
 		cases[i].taken = 0;	
 	}
+	
+	for(i = 0; i < TOTAL_CASES; i++)
+	{
+		untaken[i] = &cases[i];
+	}
 	free(moneylist);
 	moneylist = NULL;
 }
 
-void quicksort(int* array, int start, int end)
+remove(casing* array, casing key)
+{
+	
+}
+
+void quicksort(casing* array, int mode, int start, int end)
 {
 	if(start - end != 0)
 	{
-		int pivot = partition(array, start, end);
-		quicksort(array, start, pivot-1);
-		quicksort(array, pivot, end);
+		int pivot = partition(array, mode, start, end);
+		quicksort(array, mode, start, pivot-1);
+		quicksort(array, mode, pivot, end);
 	}
 }
 
-int partition(int* array, int i, int j)
+int partition(casing* array, int mode, int i, int j)
 {
 	int pivot = (i + j)/2;
-	while(i < j)
+	if(mode == CASE_MODE)
 	{
-		while(array[i] < array[pivot])
+		while(i < j)
 		{
-			i += 1;
+			while(array[i].caseno < array[pivot].caseno)
+			{
+				i += 1;
+			}
+			while(array[j].caseno > array[pivot].caseno)
+			{
+				j -= 1;
+			}
+			if(array[i].caseno > array[pivot].caseno && array[j].caseno < array[pivot].caseno)
+			{
+				casing temp = array[i];
+				array[i] = array[j];
+				array[j] = temp;
+			}
 		}
-		while(array[j] > array[pivot])
+	}
+	if(mode == MONEY_MODE)
+	{
+		
+		while(i < j)
 		{
-			j -= 1;
-		}
-		if(array[i] > array[pivot] && array[j] < array[pivot])
-		{
-			int temp = array[i];
-			array[i] = array[j];
-			array[j] = temp;
+			while(array[i].value < array[pivot].value)
+			{
+				i += 1;
+			}
+			while(array[j].value > array[pivot].value)
+			{
+				j -= 1;
+			}
+			if(array[i].value > array[pivot].value && array[j].value < array[pivot].value)
+			{
+				casing temp = array[i];
+				array[i] = array[j];
+				array[j] = temp;
+			}
 		}
 	}
 	return i;
@@ -151,11 +188,11 @@ int listcases(int mode)
 			}
 			else
 			{ 
-				return 1;
+				return 1;		// ERROR
 			}
 		}		 
 	}
-	quicksort(available, 0, casesleft);
+	quicksort(available, mode, 0, casesleft);
 	printf("cases avaiable to pick from:\n");
 	for(i = 0; i < casesleft; i++)
 	{
@@ -224,6 +261,16 @@ casing* casematch(casing* array, int size, int key)
 	return NULL;				// FAILURE
 }
 
+int offer(void)
+{
+	int avg = 0;
+	int i;
+	for(i = 0; i < casesleft; i++)
+	{
+		
+	}
+}
+
 void play()
 {
 	// assume that arrays are already set up properly
@@ -235,12 +282,32 @@ void play()
 	printf("Choose a case to keep!\n  >  ");
 	// read whether the selection is valid
 	*chosen = readcase();
-	do 
+	chosen->taken = 1;
+	casesleft -= 1;
+	untaken[TOTAL_CASES - casesleft] = *chosen;
+	// eliminate the cases
+	while(casesleft > 2)
 	{
-		printf("Pick a case to eliminate!\n  >  ");
+		int bfreq = rand() % (casesleft / 4);		// the number of turns it will take for the banker to call
+		if(bfreq == 0)
+		{
+			bfreq = 1;
+		}
+		while(bfreq > 0)
+		{
+			printf("Pick a case to eliminate!\n  >  ");
+			casing* in = readcase();
+			in->taken = 1;
+			casesleft -= 1;
+			untaken[TOTAL_CASES - casesleft] = NULL;
+			remove(untaken, in);
+			bfreq -= 1;
+		}
+		/* offer a deal: expected value of remaining cases */
 		
-	} while(casesleft > 2);
-	
+		int deal 
+	}
+
 	free(chosen);
 	chosen = NULL;
 }
