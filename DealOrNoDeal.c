@@ -17,10 +17,9 @@ typedef struct
 
 casing cases[TOTAL_CASES];
 int casesleft = TOTAL_CASES;
-int* moneylist;		// gives errors unless I put it here
 
 
-void initarrays();
+void initarrays(int*);
 void initcases();
 int listcases(int);
 void quicksort(int*, int, int);		// sorts an array of cases
@@ -39,27 +38,25 @@ int main()
 }
 
 
-void initarrays()
+void initarrays(int* mlist)
 {
-	
-	moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
-	moneylist[0] = 1;
-	moneylist[1] = 5;
-	moneylist[2] = 10;
-	moneylist[3] = 25;
-	moneylist[4] = 50;
-	moneylist[5] = 75;
-	moneylist[6] = 100;
-	moneylist[7] = 200;
-	moneylist[8] = 300;
-	moneylist[9] = 400;
-	moneylist[10] = 500;
-	moneylist[11] = 750;
-	moneylist[12] = 1000;
+	mlist[0] = 1;
+	mlist[1] = 5;
+	mlist[2] = 10;
+	mlist[3] = 25;
+	mlist[4] = 50;
+	mlist[5] = 75;
+	mlist[6] = 100;
+	mlist[7] = 200;
+	mlist[8] = 300;
+	mlist[9] = 400;
+	mlist[10] = 500;
+	mlist[11] = 750;
+	mlist[12] = 1000;
 	int i;
 	for(i = 13; i < TOTAL_CASES; i++)
 	{
-		moneylist[i] = moneylist[i-13] * 1000;
+		mlist[i] = mlist[i-13] * 1000;
 	}
 }
 
@@ -67,7 +64,8 @@ void initcases()
 {
 	// print a welcome screen with the rules
 	// .....
-	initarrays();
+	int* moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
+	initarrays(moneylist);
 	casesleft = TOTAL_CASES;
 	int i;
 	time_t t;
@@ -246,4 +244,3 @@ void play()
 	free(chosen);
 	chosen = NULL;
 }
-
