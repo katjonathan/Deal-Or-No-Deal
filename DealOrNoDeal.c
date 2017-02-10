@@ -25,9 +25,10 @@ void initcases();
 int listcases(int);
 void quicksort(casing*, int, int, int);		// sorts an array of cases
 int partition(casing*, int, int, int);		// helper to quicksort
+int binsearch(casing*, int, int, int);
+int remove(casing*, casing);
 casing* readcase();					// read user selection
 casing* casematch(casing*, int, int);		// matches an int to any entry in cases
-void remove(casing*, casing);
 int offer();		// this is the value of the banker's offer
 
 
@@ -108,9 +109,44 @@ void initcases()
 	moneylist = NULL;
 }
 
-remove(casing* array, casing key)
+int binsearch(casing* array, int key, int start, int end)
 {
-	
+	int mid = (start+end)/2;
+	if(end-start <= 0)
+	{
+		return -1;
+	}
+	if(key == array[mid].value)
+	{
+		return mid;
+	}
+	else if(key < array[mid].value)
+	{
+		remove(array, key, start, mid);
+	}
+	else if(key > array[mid].value)
+	{
+		remove(array, key, mid+1, end);
+	}
+}
+
+int remove(casing* array, int key)
+{
+	quicksort(array, MONEY_MODE, 0, TOTAL_CASES);
+	// binary search for the key
+	int index = binsearch(array, key, 0, TOTAL_CASES);
+	if(index != -1)
+	{
+		int i;
+		for(i = index; i < casesleft-1; i++)
+		{
+			casing temp = array[i];
+			array[i] = array[i+1];
+			array[i+1] = temp;
+		}
+		return 0;
+	}
+	return -1;
 }
 
 void quicksort(casing* array, int mode, int start, int end)
@@ -148,7 +184,6 @@ int partition(casing* array, int mode, int i, int j)
 	}
 	if(mode == MONEY_MODE)
 	{
-		
 		while(i < j)
 		{
 			while(array[i].value < array[pivot].value)
@@ -188,7 +223,7 @@ int listcases(int mode)
 			}
 			else
 			{ 
-				return 1;		// ERROR
+				return -1;		// ERROR
 			}
 		}		 
 	}
@@ -300,12 +335,12 @@ void play()
 			in->taken = 1;
 			casesleft -= 1;
 			untaken[TOTAL_CASES - casesleft] = NULL;
-			remove(untaken, in);
+			remove(untaken, in->value, 0, TOTAL_CASES);
 			bfreq -= 1;
 		}
 		/* offer a deal: expected value of remaining cases */
 		
-		int deal 
+		int deal = offer();
 	}
 
 	free(chosen);
