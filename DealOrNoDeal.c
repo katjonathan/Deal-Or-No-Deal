@@ -15,21 +15,23 @@ typedef struct
 } casing;
 
 
-casing cases[TOTAL_CASES];
-casing* untaken[TOTAL_CASES];
+casing cases[TOTAL_CASES];			// all of the cases
+casing* untaken[TOTAL_CASES];		// pointers to the remaining cases
 int casesleft = TOTAL_CASES;
 
 
 void initarrays(int*);
 void initcases();
-int listcases(int);
+int listcases(int);							// lists all available cases 
 void quicksort(casing*, int, int, int);		// sorts an array of cases
-int partition(casing*, int, int, int);		// helper to quicksort
-int binsearch(casing*, int, int, int);
-int remove(casing*, casing);
-casing* readcase();					// read user selection
+int partition(casing*, int, int, int);		// helper to quicksort()
+int binsearch(casing*, int, int, int);		// helper to rem()
+int rem(casing*, int);						// removes case from the untaken list
+casing* readcase();							// read user selection
 casing* casematch(casing*, int, int);		// matches an int to any entry in cases
-int offer();		// this is the value of the banker's offer
+int offer();								// this is the value of the banker's offer
+char grabchar(void);						// helper to get first character from input
+
 
 
 int main()
@@ -122,15 +124,15 @@ int binsearch(casing* array, int key, int start, int end)
 	}
 	else if(key < array[mid].value)
 	{
-		remove(array, key, start, mid);
+		binsearch(array, key, start, mid);
 	}
 	else if(key > array[mid].value)
 	{
-		remove(array, key, mid+1, end);
+		binsearch(array, key, mid+1, end);
 	}
 }
 
-int remove(casing* array, int key)
+int rem(casing* array, int key)
 {
 	quicksort(array, MONEY_MODE, 0, TOTAL_CASES);
 	// binary search for the key
@@ -140,6 +142,7 @@ int remove(casing* array, int key)
 		int i;
 		for(i = index; i < casesleft-1; i++)
 		{
+			// twirl it around until its at the end of the index
 			casing temp = array[i];
 			array[i] = array[i+1];
 			array[i+1] = temp;
@@ -302,15 +305,41 @@ int offer(void)
 	int i;
 	for(i = 0; i < casesleft; i++)
 	{
-		
+		// get sum of remaining cases
+		avg = avg + untaken[i]->value;
 	}
+	return avg/casesleft;
 }
+
+char grabchar(void)
+{
+	char string[1000];		// buffer for string
+	scanf("%s", string);
+	char* ptr;
+	ptr = string;
+	while(*ptr != '\0')
+	{
+		if(*ptr != ' ' || *ptr != '\t' || *ptr != '\n')
+		{
+			if((int)*ptr >= 97 && (int)*ptr <= 122)
+			{
+				return toupper(*ptr);
+			}
+			else
+			{
+				return *ptr;
+			}
+		}
+		ptr += 1;
+	}
+	return *ptr;
+}
+
 
 void play()
 {
 	// assume that arrays are already set up properly
 	// list all the cases available
-	int i;
 	// points to a case in the case array
 	casing** chosen = (casing**)malloc(sizeof(casing*));
 	listcases(CASE_MODE);
@@ -321,7 +350,7 @@ void play()
 	casesleft -= 1;
 	untaken[TOTAL_CASES - casesleft] = *chosen;
 	// eliminate the cases
-	while(casesleft > 2)
+	while(casesleft > 1)
 	{
 		int bfreq = rand() % (casesleft / 4);		// the number of turns it will take for the banker to call
 		if(bfreq == 0)
@@ -335,14 +364,68 @@ void play()
 			in->taken = 1;
 			casesleft -= 1;
 			untaken[TOTAL_CASES - casesleft] = NULL;
-			remove(untaken, in->value, 0, TOTAL_CASES);
+			rem(untaken, in->value);
 			bfreq -= 1;
 		}
 		/* offer a deal: expected value of remaining cases */
 		
-		int deal = offer();
+		int deal = offer();	 
+		char* input = (char*)malloc(sizeof(char));
+		while(1)
+		{
+			printf("The banker offers you $%d.00. Will you take it? (y/n)\n", deal);
+			printf(">  ");
+			input = grabchar();
+			if(input == 'Y' || input == 'N')
+			{
+				if(input == 'Y')
+				{
+					printf("Your case contained.......$%d\n", *chosen->value);
+					if(*chosen->value > deal)
+					{
+						printf("YOU WIN!\n");
+					}
+					else if(*chosen->value < deal)
+					{
+						printf("YOU LOSE!\n");
+					}
+					else
+					{
+						printf("TIE!\n");
+					}
+					break;
+				}
+			}
+		}
 	}
-
+	while(1)
+		{
+			printf("There is only one case left. Will you switch cases? (y/n)\n";
+			printf(">  ");
+			input = grabchar();
+			if(input == 'Y' || input == 'N')
+			{
+				if(input == 'Y')
+				{
+					casing temp = **chosen;
+					*chosen = 
+				}
+					printf("Your case contained.......$%d\n", *chosen->value);
+					if(*chosen->value > )
+					{
+						printf("YOU WIN!\n");
+					}
+					else if(*chosen->value < deal)
+					{
+						printf("YOU LOSE!\n");
+					}
+					break;
+			}
+		}
+	
+	
+	free(input);
 	free(chosen);
+	input = NULL;
 	chosen = NULL;
 }
