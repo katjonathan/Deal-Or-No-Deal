@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <unistd.h>
 
 #define TOTAL_CASES 25
 
@@ -15,7 +16,7 @@ typedef struct
 
 typedef enum {CASE_MODE, MONEY_MODE} mode;
 
-casing cases[TOTAL_CASES];		// all of the cases
+casing cases[TOTAL_CASES];			// all of the cases
 int casesleft = TOTAL_CASES;
 
 // FUNCTION DECLARATIONS NEEDS TO BE REDONE
@@ -23,22 +24,20 @@ void initarrays(int*);				// helper to initcases()
 void initcases(void);				// initializes cases
 int listcases(mode);				// lists all available cases
 int linsearch(mode, int);			// helper to rem()
-int rem(mode, int);				// removes case from the cases list
-void sort(mode);				// sorts cases[] using insertion sort
+int rem(mode, int);					// removes case from the cases list
+void sort(mode);					// sorts cases[] using insertion sort
 casing* readcase(void);				// read user selection
 casing* casematch(int);				// matches an int to any entry in list of cases
-int offer(void);				// this is the value of the banker's offer
+int offer(void);					// this is the value of the banker's offer
 void grabchar(char*);				// helper to get first character from input
-void play(void);				// plays the game
+void play(void);					// plays the game
 
 
 int main()
 {
-	while(1)
-	{
-		initcases();
-		play();
-	}
+	initcases();
+	play();
+	
 	return 0;
 }
 
@@ -58,50 +57,62 @@ void initarrays(int* mlist)
 	mlist[10] = 500;
 	mlist[11] = 750;
 	mlist[12] = 1000;
+	
 	int i;
 	for(i = 13; i < TOTAL_CASES; i++)
 	{
-		mlist[i] = mlist[i-13] * 1000;
+		mlist[i] = mlist[i-12] * 1000;
 	}
+	
 }
 
 void initcases()
 {
-	// print a welcome screen with the rules
-	// .....
 	int* moneylist = (int*)malloc(sizeof(int)*TOTAL_CASES);
-	initarrays(moneylist);
-	casesleft = TOTAL_CASES;
-	int i;
-	srand(time(NULL));
+	if(moneylist != NULL)
+	{	
+		initarrays(moneylist);
+		casesleft = TOTAL_CASES;
+		int i;
+		srand(time(NULL));
 
-	// generate the cases
-	for(i = 0; i < TOTAL_CASES; i++)
-	{
-		cases[i].caseno = i;
-		// search to see if value was recorded previously
-		int flag = 0;
-		int random;
-		do
+		// generate the cases
+		for(i = 0; i < TOTAL_CASES; i++)
 		{
-			random = moneylist[rand() % TOTAL_CASES];
-			int j;
-			for(j = 0; j < i; j++)
+			cases[i].caseno = i;
+			// search to see if value was recorded previously
+			int flag = 0;
+			int random;
+			do
 			{
-				if(random == cases[j].value)
+				random = moneylist[rand() % TOTAL_CASES];
+				int j;
+				for(j = 0; j < i; j++)
 				{
-					flag = 1;
-					break;
+					if(random == cases[j].value)
+					{
+						flag = 1;
+						break;
+					}
+					flag = 0;
 				}
-				flag = 0;
-			}
 
-		} while(flag == 1);
-		cases[i].value = random;
-		cases[i].taken = 0;
+			} while(flag == 1);
+			cases[i].value = random;
+			cases[i].taken = 0;
+		}
+		for(i = 0; i < TOTAL_CASES; i++)
+		{
+			printf("cases[%d] = $%d\n", i, cases[i].value);
+		}
+		free(moneylist);
+		moneylist = NULL;
 	}
-	free(moneylist);
-	moneylist = NULL;
+	else
+	{
+		perror("Allocation error!");
+		exit(EXIT_FAILURE);
+	}
 }
 
 int linsearch(mode m, int key)
@@ -129,7 +140,7 @@ int linsearch(mode m, int key)
 
 int rem(mode m, int key)
 {
-	//search for the key (using linear search)
+	// search for the key (using linear search)
 	int index = linsearch(m, key);
 	if(index != -1)
 	{
@@ -188,17 +199,18 @@ int listcases(mode m)
 		{
 			if(cases[i].taken == 0)
 			{
-				printf("%d\n", cases[i].caseno);
+				printf("%d\t", cases[i].caseno+1);
 			}
 		}
 		if(m == MONEY_MODE)
 		{
 			if(cases[i].taken == 0)
 			{
-				printf("%d\n", cases[i].value);
+				printf("%d\t", cases[i].value);
 			}
 		}
 	}
+	printf("\n");
 	return 0;
 }
 
@@ -210,19 +222,18 @@ casing* readcase()
 		scanf("%s", input);
 		if(strcmp(input, "exit") == 0)
 		{
-			// free input
 			free(input);
 			input = NULL;
 
 			// exit the program
 			return NULL;
 		}
-		if(strcmp(input, "cases") == 0)
+		else if(strcmp(input, "cases") == 0)
 		{
 			printf("\n");
 			listcases(CASE_MODE);
 		}
-		if(atoi(input) > 0 && atoi(input) <= casesleft)
+		else if(atoi(input) > 0 && atoi(input) <= casesleft)
 		{
 			casing* val = casematch(atoi(input));
 			if(val != NULL)
@@ -236,6 +247,7 @@ casing* readcase()
 		{
 			printf("ERROR: You have inputted an invalid number!\n");
 			printf("Type \"cases\" for a list of available cases.\n");
+			printf("Type \"exit\" to exit the program.\n");
 		}
 	} while(1);
 }
@@ -300,6 +312,7 @@ void play()
 	// points to a case in the case array
 	casing** chosen = (casing**)malloc(sizeof(casing*));
 	char** input = (char**)malloc(sizeof(char*));			// use as input for later
+	printf("Cases Available:\n");
 	listcases(CASE_MODE);
 	printf("Choose a case to keep!\n  >  ");
 	// read whether the selection is valid
@@ -318,7 +331,7 @@ void play()
 				// free everything; premature exit
 				free(input);
 				free(chosen);
-				return;
+				exit(EXIT_SUCCESS);
 			}
 			rem(CASE_MODE, in->caseno);
 			bfreq -= 1;
