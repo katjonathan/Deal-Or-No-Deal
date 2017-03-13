@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 #define TOTAL_CASES 25
-#define CASE_MODE 0
-#define MONEY_MODE 1
 
 typedef struct
 {
@@ -14,32 +13,32 @@ typedef struct
 	int taken;
 } casing;
 
+typedef enum {CASE_MODE, MONEY_MODE} mode;
 
-casing cases[TOTAL_CASES];			// all of the cases
-casing* untaken[TOTAL_CASES];		// pointers to the remaining cases
+casing cases[TOTAL_CASES];		// all of the cases
 int casesleft = TOTAL_CASES;
 
-
-void initarrays(int*);
-void initcases();
-int listcases(int);							// lists all available cases 
-void quicksort(casing*, int, int, int);		// sorts an array of cases
-int partition(casing*, int, int, int);		// helper to quicksort()
-int binsearch(casing*, int, int, int);		// helper to rem()
-int rem(casing*, int);						// removes case from the untaken list
-casing* readcase();							// read user selection
-casing* casematch(casing*, int, int);		// matches an int to any entry in cases
-int offer();								// this is the value of the banker's offer
-char grabchar(void);						// helper to get first character from input
-
+// FUNCTION DECLARATIONS NEEDS TO BE REDONE
+void initarrays(int*);				// helper to initcases()
+void initcases(void);				// initializes cases
+int listcases(mode);				// lists all available cases
+int linsearch(mode, int);			// helper to rem()
+int rem(mode, int);				// removes case from the cases list
+void sort(mode);				// sorts cases[] using insertion sort
+casing* readcase(void);				// read user selection
+casing* casematch(int);				// matches an int to any entry in list of cases
+int offer(void);				// this is the value of the banker's offer
+void grabchar(char*);				// helper to get first character from input
+void play(void);				// plays the game
 
 
 int main()
 {
-	initcases();
-	// .....
-	// play();
-	
+	while(1)
+	{
+		initcases();
+		play();
+	}
 	return 0;
 }
 
@@ -74,17 +73,16 @@ void initcases()
 	initarrays(moneylist);
 	casesleft = TOTAL_CASES;
 	int i;
-	time_t t;
-	srand((unsigned) time(&t));
-	
+	srand(time(NULL));
+
 	// generate the cases
 	for(i = 0; i < TOTAL_CASES; i++)
-	{		
+	{
 		cases[i].caseno = i;
 		// search to see if value was recorded previously
 		int flag = 0;
 		int random;
-		do 
+		do
 		{
 			random = moneylist[rand() % TOTAL_CASES];
 			int j;
@@ -97,178 +95,136 @@ void initcases()
 				}
 				flag = 0;
 			}
-			
+
 		} while(flag == 1);
 		cases[i].value = random;
-		cases[i].taken = 0;	
-	}
-	
-	for(i = 0; i < TOTAL_CASES; i++)
-	{
-		untaken[i] = &cases[i];
+		cases[i].taken = 0;
 	}
 	free(moneylist);
 	moneylist = NULL;
 }
 
-int binsearch(casing* array, int key, int start, int end)
+int linsearch(mode m, int key)
 {
-	int mid = (start+end)/2;
-	if(end-start <= 0)
+	int i;
+	for(i = 0; i < casesleft; i++)
 	{
-		return -1;
+		if(m == MONEY_MODE)
+		{
+			if(key == cases[i].value)
+			{
+				return i;
+			}
+		}
+		if(m == CASE_MODE)
+		{
+			if(key == cases[i].caseno)
+			{
+				return i;
+			}
+		}
 	}
-	if(key == array[mid].value)
-	{
-		return mid;
-	}
-	else if(key < array[mid].value)
-	{
-		binsearch(array, key, start, mid);
-	}
-	else if(key > array[mid].value)
-	{
-		binsearch(array, key, mid+1, end);
-	}
+	return -1;
 }
 
-int rem(casing* array, int key)
+int rem(mode m, int key)
 {
-	quicksort(array, MONEY_MODE, 0, TOTAL_CASES);
-	// binary search for the key
-	int index = binsearch(array, key, 0, TOTAL_CASES);
+	//search for the key (using linear search)
+	int index = linsearch(m, key);
 	if(index != -1)
 	{
 		int i;
 		for(i = index; i < casesleft-1; i++)
 		{
 			// twirl it around until its at the end of the index
-			casing temp = array[i];
-			array[i] = array[i+1];
-			array[i+1] = temp;
+			casing temp = cases[i];
+			cases[i] = cases[i+1];
+			cases[i+1] = temp;
 		}
-		return 0;
+		casesleft -= 1;
+		cases[i].taken = 1;
 	}
-	return -1;
+	return index;
 }
 
-void quicksort(casing* array, int mode, int start, int end)
+void sort(mode m)
 {
-	if(start - end != 0)
-	{
-		int pivot = partition(array, mode, start, end);
-		quicksort(array, mode, start, pivot-1);
-		quicksort(array, mode, pivot, end);
-	}
-}
-
-int partition(casing* array, int mode, int i, int j)
-{
-	int pivot = (i + j)/2;
-	if(mode == CASE_MODE)
-	{
-		while(i < j)
-		{
-			while(array[i].caseno < array[pivot].caseno)
-			{
-				i += 1;
-			}
-			while(array[j].caseno > array[pivot].caseno)
-			{
-				j -= 1;
-			}
-			if(array[i].caseno > array[pivot].caseno && array[j].caseno < array[pivot].caseno)
-			{
-				casing temp = array[i];
-				array[i] = array[j];
-				array[j] = temp;
-			}
-		}
-	}
-	if(mode == MONEY_MODE)
-	{
-		while(i < j)
-		{
-			while(array[i].value < array[pivot].value)
-			{
-				i += 1;
-			}
-			while(array[j].value > array[pivot].value)
-			{
-				j -= 1;
-			}
-			if(array[i].value > array[pivot].value && array[j].value < array[pivot].value)
-			{
-				casing temp = array[i];
-				array[i] = array[j];
-				array[j] = temp;
-			}
-		}
-	}
-	return i;
-}
-
-int listcases(int mode)
-{
-	int* available = (int*)malloc(sizeof(int)*casesleft);
+	// insertion sort
 	int i;
-	for(i = 0; i < TOTAL_CASES; i++)
-	{
-		if(cases[i].taken == 0)
-		{
-			if(mode == MONEY_MODE)
-			{
-				available[i] = cases[i].value;
-			}
-			if(mode == CASE_MODE)
-			{
-				available[i] = cases[i].caseno;
-			}
-			else
-			{ 
-				return -1;		// ERROR
-			}
-		}		 
-	}
-	quicksort(available, mode, 0, casesleft);
-	printf("cases avaiable to pick from:\n");
 	for(i = 0; i < casesleft; i++)
 	{
-		printf("%d\n", available[i]);
+		int j;
+		for(j = i+1; j > 0; j--)
+		{
+			if(m == CASE_MODE)
+			{
+				if(cases[j].caseno < cases[i].caseno)
+				{
+					casing temp = cases[j];
+					cases[j] = cases[j-1];
+					cases[j-1] = temp;
+				}
+			}
+			else if(m == MONEY_MODE)
+			{
+				if(cases[j].value < cases[i].value)
+				{
+					casing temp = cases[j];
+					cases[j] = cases[j-1];
+					cases[j-1] = temp;
+				}
+			}
+		}
 	}
-	free(available);
-	available = NULL;
+}
+
+int listcases(mode m)
+{
+	sort(m);
+	int i;
+	for(i = 0; i < casesleft; i++)
+	{
+		if(m == CASE_MODE)
+		{
+			if(cases[i].taken == 0)
+			{
+				printf("%d\n", cases[i].caseno);
+			}
+		}
+		if(m == MONEY_MODE)
+		{
+			if(cases[i].taken == 0)
+			{
+				printf("%d\n", cases[i].value);
+			}
+		}
+	}
 	return 0;
 }
 
 casing* readcase()
 {
 	char* input = (char*)malloc(sizeof(char)*1000);
-	do 
+	do
 	{
-		gets(input);
+		scanf("%s", input);
 		if(strcmp(input, "exit") == 0)
 		{
-			// free all arrays
+			// free input
 			free(input);
 			input = NULL;
-			
+
 			// exit the program
-			exit(0);
+			return NULL;
 		}
 		if(strcmp(input, "cases") == 0)
 		{
-			printf("\n");			
+			printf("\n");
 			listcases(CASE_MODE);
 		}
-		if(strcmp(input, "help") == 0)
+		if(atoi(input) > 0 && atoi(input) <= casesleft)
 		{
-			printf("\n");
-			// send to help screen
-		}
-		if(atoi(input) > 0)
-		{
-			casing* val = casematch(cases, casesleft, atoi(input));
+			casing* val = casematch(atoi(input));
 			if(val != NULL)
 			{
 				free(input);
@@ -284,11 +240,12 @@ casing* readcase()
 	} while(1);
 }
 
-casing* casematch(casing* array, int size, int key)
+casing* casematch(int key)
 {
-	casing* ptr = array;
+	// finds the case based on the caseno
+	casing* ptr = cases;
 	int i;
-	for(i = 0; i < size; i++)
+	for(i = 0; i < casesleft; i++)
 	{
 		if(ptr->caseno == key && ptr->taken == 0)
 		{
@@ -299,6 +256,7 @@ casing* casematch(casing* array, int size, int key)
 	return NULL;				// FAILURE
 }
 
+
 int offer(void)
 {
 	int avg = 0;
@@ -306,12 +264,12 @@ int offer(void)
 	for(i = 0; i < casesleft; i++)
 	{
 		// get sum of remaining cases
-		avg = avg + untaken[i]->value;
+		avg = avg + cases[i].value;
 	}
 	return avg/casesleft;
 }
 
-char grabchar(void)
+void grabchar(char* ret)
 {
 	char string[1000];		// buffer for string
 	scanf("%s", string);
@@ -323,18 +281,17 @@ char grabchar(void)
 		{
 			if((int)*ptr >= 97 && (int)*ptr <= 122)
 			{
-				return toupper(*ptr);
+				*ret = toupper(*ptr);
 			}
 			else
 			{
-				return *ptr;
+				*ret = *ptr;
 			}
+			break;
 		}
 		ptr += 1;
 	}
-	return *ptr;
 }
-
 
 void play()
 {
@@ -342,50 +299,48 @@ void play()
 	// list all the cases available
 	// points to a case in the case array
 	casing** chosen = (casing**)malloc(sizeof(casing*));
+	char** input = (char**)malloc(sizeof(char*));			// use as input for later
 	listcases(CASE_MODE);
 	printf("Choose a case to keep!\n  >  ");
 	// read whether the selection is valid
 	*chosen = readcase();
-	chosen->taken = 1;
-	casesleft -= 1;
-	untaken[TOTAL_CASES - casesleft] = *chosen;
+	rem(CASE_MODE, (*chosen)->caseno);
 	// eliminate the cases
 	while(casesleft > 1)
 	{
-		int bfreq = rand() % (casesleft / 4);		// the number of turns it will take for the banker to call
-		if(bfreq == 0)
-		{
-			bfreq = 1;
-		}
+		int bfreq = (rand() % (casesleft / 4))+1;		// the number of turns it will take for the banker to call
 		while(bfreq > 0)
 		{
 			printf("Pick a case to eliminate!\n  >  ");
 			casing* in = readcase();
-			in->taken = 1;
-			casesleft -= 1;
-			untaken[TOTAL_CASES - casesleft] = NULL;
-			rem(untaken, in->value);
+			if(in == NULL)
+			{
+				// free everything; premature exit
+				free(input);
+				free(chosen);
+				return;
+			}
+			rem(CASE_MODE, in->caseno);
 			bfreq -= 1;
 		}
-		/* offer a deal: expected value of remaining cases */
-		
-		int deal = offer();	 
-		char* input = (char*)malloc(sizeof(char));
+		// offer a deal: expected value of remaining cases
+
+		int deal = offer();
 		while(1)
 		{
-			printf("The banker offers you $%d.00. Will you take it? (y/n)\n", deal);
+			printf("The banker offers you $%d. Will you take it? (y/n)\n", deal);
 			printf(">  ");
-			input = grabchar();
-			if(input == 'Y' || input == 'N')
+			grabchar(*input);
+			if(**input == 'Y' || **input == 'N')
 			{
-				if(input == 'Y')
+				if(**input == 'Y')
 				{
-					printf("Your case contained.......$%d\n", *chosen->value);
-					if(*chosen->value > deal)
+					printf("Your case contained.......$%d\n", (*chosen)->value);
+					if((*chosen)->value > deal)
 					{
 						printf("YOU WIN!\n");
 					}
-					else if(*chosen->value < deal)
+					else if((*chosen)->value < deal)
 					{
 						printf("YOU LOSE!\n");
 					}
@@ -399,31 +354,36 @@ void play()
 		}
 	}
 	while(1)
+	{
+		printf("There is only one case left. Will you switch cases? (y/n)\n");
+		printf(">  ");
+		grabchar(*input);
+		if(**input == 'Y' || **input == 'N')
 		{
-			printf("There is only one case left. Will you switch cases? (y/n)\n";
-			printf(">  ");
-			input = grabchar();
-			if(input == 'Y' || input == 'N')
+			casing** other = (casing**)malloc(sizeof(casing*));
+			if(**input == 'Y')
 			{
-				if(input == 'Y')
-				{
-					casing temp = **chosen;
-					*chosen = 
-				}
-					printf("Your case contained.......$%d\n", *chosen->value);
-					if(*chosen->value > )
-					{
-						printf("YOU WIN!\n");
-					}
-					else if(*chosen->value < deal)
-					{
-						printf("YOU LOSE!\n");
-					}
-					break;
+				*other = *chosen;
+				*chosen = &cases[0];
 			}
+			if(**input == 'N')
+			{
+				*other = &cases[0];
+			}
+			printf("Your case contained.......$%d\n", (*chosen)->value);
+			if((*chosen)->value > (*other)->value)
+			{
+				printf("YOU WIN!\n");
+			}
+			else if((*chosen)->value < (*other)->value)
+			{
+				printf("YOU LOSE!\n");
+			}
+			free(other);
+			other = NULL;
+			break;
 		}
-	
-	
+	}
 	free(input);
 	free(chosen);
 	input = NULL;
