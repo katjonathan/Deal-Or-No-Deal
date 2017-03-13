@@ -5,4 +5,4 @@ A text-based version of the game show "Deal or No Deal". Written in C.
 
 - Source code is monolithic
 
-- Source code will be hard to debug
+- The program is not thread-safe
