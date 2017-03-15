@@ -190,8 +190,7 @@ void sort(mode m)
 {
 	// insertion sort
 	int i;
-	printf("DEBUG:\n");
-	for(i = 0; i < casesleft; i++)
+	for(i = 0; i < casesleft-1; i++)
 	{
 		int j;
 		for(j = i+1; j > 0; j--)
@@ -215,28 +214,6 @@ void sort(mode m)
 				}
 			}
 		}
-		// debugging state of sorting
-		int k;
-		for(k = 0; k < casesleft; k++)
-		{
-			if(m == CASE_MODE)
-			{
-				printf("%d", cases[k].caseno);
-			}
-			if(m == MONEY_MODE)
-			{
-				printf("%d", cases[k].value);
-			}
-			if(k == i)
-			{
-				printf("|");
-			}
-			else if(k != i && k != casesleft-1)
-			{
-				printf("  ");
-			}
-		}
-		printf("\n");
 	}
 }
 
