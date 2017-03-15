@@ -31,7 +31,7 @@ casing* readcase(void);				// read user selection
 int offer(void);					// this is the value of the banker's offer
 void grabchar(char*);				// helper to get first character from input
 void play(void);					// plays the game
-
+ 
 
 int main()
 {
